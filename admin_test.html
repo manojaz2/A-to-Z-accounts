@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>A to Z Packers & Movers — Admin & Tracking</title>
+<meta name="description" content="Create consignments, auto-generate Tracking IDs, and let customers track globally on any device." />
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#0b0f14; --bg:#0f172a; --card:#111827; --muted:#94a3b8;
+    --brand:#22c55e; --brand-2:#06b6d4; --danger:#ef4444; --warn:#f59e0b;
+    --border:#1f2937; --white:#e5e7eb;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;background:linear-gradient(180deg,#0c1222,#0a0f1a);
+    color:var(--white);font-family:Inter,system-ui,Segoe UI,Arial;
+  }
+  a{color:var(--brand-2);text-decoration:none}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px}
+  .nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .btn{background:#1f2937;border:1px solid var(--border);color:var(--white);padding:10px 14px;border-radius:12px;cursor:pointer}
+  .btn:hover{border-color:#2e3a4a}
+  .btn.primary{background:linear-gradient(135deg,var(--brand),#16a34a);border:none}
+  .btn.warn{background:linear-gradient(135deg,var(--warn),#eab308);border:none;color:#111}
+  .btn.danger{background:linear-gradient(135deg,var(--danger),#b91c1c);border:none}
+  .input,.select,.textarea{
+    width:100%; padding:10px 12px; border-radius:12px;border:1px solid var(--border);
+    background:#0b1220;color:var(--white);outline:none
+  }
+  .grid{display:grid;gap:12px}
+  .grid2{grid-template-columns:repeat(2,1fr)}
+  .grid3{grid-template-columns:repeat(3,1fr)}
+  @media (max-width:800px){.grid2,.grid3{grid-template-columns:1fr}}
+  .card{background:#0b1020;border:1px solid #101827;border-radius:16px;padding:16px}
+  .muted{color:var(--muted);font-size:14px}
+  .title{font-size:20px;font-weight:700;margin:0 0 12px}
+  .subtitle{font-size:16px;font-weight:600;margin:0 0 12px;color:#cbd5e1}
+  .table{width:100%;border-collapse:collapse}
+  .table th,.table td{border-bottom:1px solid #1f2937;padding:10px;text-align:left;font-size:14px}
+  .tag{padding:4px 8px;border-radius:999px;border:1px solid #263244;background:#0b1220;font-size:12px}
+  .status{font-weight:700}
+  .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .right{margin-left:auto}
+  .notice{padding:10px 12px;border-radius:12px;background:#0e172a;border:1px dashed #1f2a40;color:#cbd5e1}
+  .hero{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .pill{border:1px solid #1f2937;border-radius:999px;padding:8px 12px;background:#0b1220;color:#cbd5e1}
+  .copy{cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Top Navigation -->
+  <div class="nav">
+    <div class="hero">
+      <span class="pill">A to Z Packers & Movers</span>
+      <a class="pill" href="#/track">Public Tracking</a>
+      <a class="pill" href="#/admin">Admin Panel</a>
+    </div>
+    <div class="flex">
+      <span id="authEmail" class="muted"></span>
+      <button id="btnSignOut" class="btn" style="display:none">Sign out</button>
+    </div>
+  </div>
+
+  <!-- ROUTES -->
+  <div id="routeTrack" class="route" style="display:none">
+    <div class="card">
+      <h2 class="title">Track Your Consignment</h2>
+      <div class="grid grid2">
+        <input id="trackInput" class="input" placeholder="Enter Tracking ID (e.g., AZ-20250827-ABC123)" />
+        <button id="btnTrack" class="btn primary">Track</button>
+      </div>
+      <p class="muted" style="margin-top:8px">
+        Tip: open direct link like <code>/#%2Ftrack%2FAZ-20250827-ABC123</code>
+      </p>
+    </div>
+
+    <div id="trackResult" class="card" style="margin-top:12px;display:none"></div>
+  </div>
+
+  <div id="routeAdmin" class="route" style="display:none">
+    <!-- Login form -->
+    <div id="adminGate" class="card" style="display:none">
+      <h2 class="title">Admin Sign In</h2>
+      <div class="grid grid2">
+        <input id="email" type="email" class="input" placeholder="Admin email" />
+        <input id="password" type="password" class="input" placeholder="Password" />
+      </div>
+      <div class="flex" style="margin-top:10px">
+        <button id="btnSignIn" class="btn primary">Sign in</button>
+        <span class="muted">New admin? Ask owner to create credentials.</span>
+      </div>
+    </div>
+
+    <!-- Admin console -->
+    <div id="adminApp" style="display:none">
+      <div class="card">
+        <div class="flex">
+          <h2 class="title">Create / Update Consignment</h2>
+          <span class="right"></span>
+          <button id="btnNew" class="btn">New Blank</button>
+          <button id="btnSave" class="btn primary">Save</button>
+        </div>
+        <div class="grid grid3">
+          <input id="f_trackingId" class="input" placeholder="Tracking ID (auto)" disabled />
+          <input id="f_customerName" class="input" placeholder="Customer Name *" />
+          <input id="f_contactPhone" class="input" placeholder="Contact Phone" />
+          <input id="f_fromLocation" class="input" placeholder="From Location *" />
+          <input id="f_toLocation" class="input" placeholder="To Location *" />
+          <input id="f_contactEmail" class="input" placeholder="Contact Email" />
+          <input id="f_bookingDate" type="date" class="input" />
+          <input id="f_expectedDeliveryDate" type="date" class="input" />
+          <input id="f_numberOfItems" type="number" min="1" class="input" placeholder="Items *" />
+          <select id="f_status" class="select">
+            <option>Enquiry</option><option>Quotation Sent</option><option>Confirmed</option>
+            <option>Packed</option><option>In Transit</option><option>Out for Delivery</option>
+            <option>Delivered</option><option>On Hold</option><option>Cancelled</option>
+          </select>
+          <input id="f_driverName" class="input" placeholder="Driver Name" />
+          <input id="f_vehicleNumber" class="input" placeholder="Vehicle Number" />
+          <input id="f_driverPhone" class="input" placeholder="Driver Phone" />
+        </div>
+
+        <div style="margin-top:12px" class="grid">
+          <div class="subtitle">Timeline</div>
+          <div class="grid grid2">
+            <input id="tl_label" class="input" placeholder="Label (e.g., In Transit)" />
+            <input id="tl_note" class="input" placeholder="Optional note (e.g., Left Cuttack hub)" />
+          </div>
+          <div class="flex" style="margin-top:8px">
+            <button id="btnAddTimeline" class="btn">Add timeline entry</button>
+            <button id="btnCopyLink" class="btn">Copy tracking link</button>
+            <a id="whShare" class="btn" target="_blank" rel="noopener">WhatsApp Share</a>
+          </div>
+          <div id="tl_list" class="muted" style="margin-top:8px"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="flex">
+          <h3 class="subtitle">Recent Consignments</h3>
+          <span class="right"></span>
+          <input id="searchBox" class="input" placeholder="Search by Tracking ID / Name / Phone" style="max-width:340px" />
+          <button id="btnSearch" class="btn">Search</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px">
+          <table class="table" id="tbl">
+            <thead>
+              <tr>
+                <th>Tracking ID</th><th>Customer</th><th>From → To</th><th>Booking</th><th>EDD</th><th>Status</th><th>Items</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer note -->
+  <p class="muted" style="margin-top:16px;text-align:center">
+    © A to Z Packers & Movers — Global tracking across all devices.
+  </p>
+</div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, query, collection, orderBy, limit, getDocs, where } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+  /* =========================
+     1) CONFIG — FILL THIS NOW
+     ========================= */
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  /* ================
+     2) MINI ROUTER
+     ================ */
+  const routeTrack = document.getElementById('routeTrack');
+  const routeAdmin = document.getElementById('routeAdmin');
+  const adminGate = document.getElementById('adminGate');
+  const adminApp = document.getElementById('adminApp');
+  const authEmail = document.getElementById('authEmail');
+  const btnSignOut = document.getElementById('btnSignOut');
+
+  function showRoute(name){
+    document.querySelectorAll('.route').forEach(el=>el.style.display='none');
+    if(name==='track'){ routeTrack.style.display='block'; }
+    if(name==='admin'){ routeAdmin.style.display='block'; }
+  }
+  function parseHash(){
+    // #/track or #/track/{id} or #/admin
+    const h = decodeURIComponent(location.hash||'').replace(/^#\/?/,'');
+    const parts = h.split('/');
+    if(parts[0]==='track'){
+      showRoute('track');
+      if(parts[1]) autoTrack(parts[1]);
+    } else {
+      showRoute('admin');
+    }
+  }
+  window.addEventListener('hashchange', parseHash);
+  parseHash();
+
+  /* =====================
+     3) AUTH (ADMIN ONLY)
+     ===================== */
+  const email = document.getElementById('email');
+  const password = document.getElementById('password');
+  const btnSignIn = document.getElementById('btnSignIn');
+
+  btnSignIn?.addEventListener('click', async()=>{
+    try{
+      await signInWithEmailAndPassword(auth, email.value.trim(), password.value.trim());
+    }catch(e){ alert('Sign-in failed: '+e.message); }
+  });
+  btnSignOut.addEventListener('click', async()=>{
+    await signOut(auth);
+  });
+
+  onAuthStateChanged(auth, (user)=>{
+    const onAdmin = location.hash.startsWith('#/admin') || location.hash==='';
+    if(onAdmin){
+      if(user){
+        authEmail.textContent = user.email||'';
+        btnSignOut.style.display = 'inline-flex';
+        adminGate.style.display = 'none';
+        adminApp.style.display = 'block';
+        loadRecent();
+      }else{
+        authEmail.textContent = '';
+        btnSignOut.style.display = 'none';
+        adminGate.style.display = 'block';
+        adminApp.style.display = 'none';
+      }
+    }
+  });
+
+  /* ==========================
+     4) ADMIN FORM & FUNCTIONS
+     ========================== */
+  const f_trackingId = document.getElementById('f_trackingId');
+  const f_customerName = document.getElementById('f_customerName');
+  const f_contactPhone = document.getElementById('f_contactPhone');
+  const f_fromLocation = document.getElementById('f_fromLocation');
+  const f_toLocation = document.getElementById('f_toLocation');
+  const f_contactEmail = document.getElementById('f_contactEmail');
+  const f_bookingDate = document.getElementById('f_bookingDate');
+  const f_expectedDeliveryDate = document.getElementById('f_expectedDeliveryDate');
+  const f_numberOfItems = document.getElementById('f_numberOfItems');
+  const f_status = document.getElementById('f_status');
+  const f_driverName = document.getElementById('f_driverName');
+  const f_vehicleNumber = document.getElementById('f_vehicleNumber');
+  const f_driverPhone = document.getElementById('f_driverPhone');
+
+  const btnNew = document.getElementById('btnNew');
+  const btnSave = document.getElementById('btnSave');
+  const btnAddTimeline = document.getElementById('btnAddTimeline');
+  const btnCopyLink = document.getElementById('btnCopyLink');
+  const whShare = document.getElementById('whShare');
+  const tl_label = document.getElementById('tl_label');
+  const tl_note = document.getElementById('tl_note');
+  const tl_list = document.getElementById('tl_list');
+
+  let currentTimeline = []; // in-memory until save/update
+  function resetForm(){
+    f_trackingId.value = '';
+    f_customerName.value = '';
+    f_contactPhone.value = '';
+    f_fromLocation.value = '';
+    f_toLocation.value = '';
+    f_contactEmail.value = '';
+    f_bookingDate.value = '';
+    f_expectedDeliveryDate.value = '';
+    f_numberOfItems.value = '';
+    f_status.value = 'Enquiry';
+    f_driverName.value = '';
+    f_vehicleNumber.value = '';
+    f_driverPhone.value = '';
+    currentTimeline = [];
+    renderTimeline();
+    whShare.href = '#';
+  }
+  btnNew.addEventListener('click', resetForm);
+
+  function genTrackingId(){
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    let n = Math.floor(Math.random()*36**6);
+    let base36 = n.toString(36).toUpperCase().padStart(6,'0');
+    return `AZ-${y}${m}${day}-${base36}`;
+  }
+
+  function renderTimeline(){
+    if(!currentTimeline?.length){ tl_list.innerHTML = '<div class="notice">No timeline entries yet.</div>'; return; }
+    const rows = [...currentTimeline].sort((a,b)=>b.timestamp-a.timestamp).map(t=>{
+      const dt = new Date(t.timestamp).toLocaleString();
+      return `<div class="pill" style="display:inline-flex;margin:4px 6px 0 0">${dt} • <b style="margin:0 6px">${t.label}</b> ${t.note?('— '+t.note):''}</div>`;
+    }).join('');
+    tl_list.innerHTML = rows;
+  }
+
+  btnAddTimeline.addEventListener('click', ()=>{
+    const label = tl_label.value.trim() || f_status.value;
+    const note = tl_note.value.trim();
+    currentTimeline.push({timestamp: Date.now(), label, note});
+    tl_label.value = ''; tl_note.value = '';
+    renderTimeline();
+  });
+
+  btnCopyLink.addEventListener('click', async()=>{
+    const id = f_trackingId.value.trim();
+    if(!id){ alert('No Tracking ID yet. Save first.'); return; }
+    const link = location.origin + '/#%2Ftrack%2F' + encodeURIComponent(id);
+    await navigator.clipboard.writeText(link);
+    alert('Link copied:\n'+link);
+  });
+
+  function refreshWhatsApp(){
+    const id = f_trackingId.value.trim();
+    const link = location.origin + '/#%2Ftrack%2F' + encodeURIComponent(id);
+    const msg = `A to Z Packers & Movers\nTracking ID: ${id}\nTrack here: ${link}`;
+    whShare.href = 'https://wa.me/919338888550?text=' + encodeURIComponent(msg);
+  }
+
+  btnSave.addEventListener('click', async()=>{
+    try{
+      // Basic validation
+      if(!f_customerName.value.trim() || !f_fromLocation.value.trim() || !f_toLocation.value.trim() || !f_bookingDate.value || !f_expectedDeliveryDate.value || !f_numberOfItems.value){
+        alert('Please fill required fields (*)'); return;
+      }
+      let id = f_trackingId.value.trim() || genTrackingId();
+      const ref = doc(db, 'consignments', id);
+
+      const payload = {
+        trackingId: id,
+        customerName: f_customerName.value.trim(),
+        fromLocation: f_fromLocation.value.trim(),
+        toLocation: f_toLocation.value.trim(),
+        bookingDate: f_bookingDate.value,
+        expectedDeliveryDate: f_expectedDeliveryDate.value,
+        numberOfItems: Number(f_numberOfItems.value),
+        status: f_status.value,
+        contactPhone: f_contactPhone.value.trim(),
+        contactEmail: f_contactEmail.value.trim(),
+        driverName: f_driverName.value.trim(),
+        vehicleNumber: f_vehicleNumber.value.trim(),
+        driverPhone: f_driverPhone.value.trim(),
+        lastUpdatedAt: serverTimestamp(),
+      };
+
+      const snap = await getDoc(ref);
+      if(snap.exists()){
+        await updateDoc(ref, payload);
+      }else{
+        // ensure a timeline entry exists on create
+        if(!currentTimeline.length){
+          currentTimeline.push({timestamp: Date.now(), label: 'Created', note: 'Consignment created'});
+        }
+        await setDoc(ref, {...payload, timeline: currentTimeline});
+      }
+      // also update timeline if we added entries after last save
+      if(currentTimeline.length){
+        await updateDoc(ref, { timeline: currentTimeline, lastUpdatedAt: serverTimestamp() });
+      }
+
+      f_trackingId.value = id;
+      refreshWhatsApp();
+      alert('Saved ✅');
+      loadRecent();
+    }catch(e){ alert('Save failed: '+e.message); }
+  });
+
+  /* ======================
+     5) LIST + SEARCH (Admin)
+     ====================== */
+  const tbody = document.getElementById('tbody');
+  const searchBox = document.getElementById('searchBox');
+  const btnSearch = document.getElementById('btnSearch');
+
+  async function loadRecent(){
+    tbody.innerHTML = '<tr><td class="muted" colspan="8">Loading…</td></tr>';
+    const q = query(collection(db,'consignments'), orderBy('lastUpdatedAt','desc'), limit(50));
+    const qs = await getDocs(q);
+    renderRows(qs.docs.map(d=>d.data()));
+  }
+  function renderRows(rows){
+    if(!rows.length){ tbody.innerHTML = '<tr><td class="muted" colspan="8">No consignments yet.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(r=>{
+      const link = location.origin + '/#%2Ftrack%2F' + encodeURIComponent(r.trackingId);
+      return `<tr>
+        <td><code class="copy" data-copy="${link}" title="Click to copy link">${r.trackingId}</code></td>
+        <td>${r.customerName||''}<div class="muted">${r.contactPhone||''}</div></td>
+        <td>${r.fromLocation||''} <span class="muted">→</span> ${r.toLocation||''}</td>
+        <td>${r.bookingDate||''}</td>
+        <td>${r.expectedDeliveryDate||''}</td>
+        <td><span class="tag status">${r.status||''}</span></td>
+        <td>${r.numberOfItems||0}</td>
+        <td class="flex">
+          <button class="btn warn" data-edit="${r.trackingId}">Edit</button>
+          <button class="btn" data-copy="${link}">Copy Link</button>
+        </td>
+      </tr>`;
+    }).join('');
+    // bind actions
+    tbody.querySelectorAll('[data-copy]').forEach(el=>{
+      el.addEventListener('click', async(e)=>{
+        const text = e.currentTarget.getAttribute('data-copy');
+        await navigator.clipboard.writeText(text);
+        alert('Copied:\n'+text);
+      });
+    });
+    tbody.querySelectorAll('[data-edit]').forEach(el=>{
+      el.addEventListener('click', async(e)=>loadToForm(e.currentTarget.getAttribute('data-edit')));
+    });
+    // quick copy on code
+    tbody.querySelectorAll('code.copy').forEach(el=>{
+      el.addEventListener('click', async(e)=>{
+        const text = e.currentTarget.getAttribute('data-copy');
+        await navigator.clipboard.writeText(text);
+        alert('Copied:\n'+text);
+      });
+    });
+  }
+
+  btnSearch.addEventListener('click', doSearch);
+  async function doSearch(){
+    const qstr = (searchBox.value||'').trim();
+    if(!qstr){ loadRecent(); return; }
+    // naive: try exact trackingId match first
+    const ref = doc(db,'consignments', qstr);
+    const snap = await getDoc(ref);
+    if(snap.exists()){ renderRows([snap.data()]); return; }
+    // else: search by name or phone (simple client-side over recent)
+    await loadRecent(); // load 50 and filter
+    const filtered = Array.from(tbody.querySelectorAll('tr')).filter(tr=>{
+      return tr.textContent.toLowerCase().includes(qstr.toLowerCase());
+    });
+    if(!filtered.length){ tbody.innerHTML = '<tr><td class="muted" colspan="8">No results.</td></tr>'; }
+  }
+
+  async function loadToForm(id){
+    try{
+      const ref = doc(db,'consignments', id);
+      const snap = await getDoc(ref);
+      if(!snap.exists()) return alert('Not found');
+      const r = snap.data();
+      f_trackingId.value = r.trackingId||'';
+      f_customerName.value = r.customerName
